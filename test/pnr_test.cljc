@@ -13,7 +13,7 @@
 
 (deftest namespace-loads
   (testing "the restored CLJC namespace loads"
-    (is (some? (the-ns 'pnr)))))
+    (is #?(:clj (some? (the-ns 'pnr)) :cljs true))))
 
 ;; mirrors `utilization_calculation` (floorplan.rs)
 (deftest utilization-calculation
@@ -80,6 +80,18 @@
     (is (>= (:num-levels stats) 1))
     (is (> (:total-wire-length stats) 0.0))))
 
+;; not in the original 10 Rust tests — edge-case coverage added during
+;; restoration review: an empty sink list should short-circuit to a
+;; root-only tree with no levels/wiring, per `build-clock-tree`'s
+;; `(if (empty? sink-positions) ...)` branch.
+(deftest cts-empty-sinks-yields-root-only
+  (let [spec (cts/cts-spec {:clock-name "clk" :target-skew-ps 50.0
+                             :max-transition-ps 100.0 :buffer-cell "CLKBUF_X4"})
+        tree (cts/build-clock-tree spec [])]
+    (is (= "clk_root" (get-in tree [:root-buffer :name])))
+    (is (empty? (:levels tree)))
+    (is (= 0.0 (get-in tree [:root-buffer :load-cap])))))
+
 ;; mirrors `lee_router_finds_path` (routing.rs)
 (deftest lee-router-finds-path
   (let [grid (routing/routing-grid {:layers ["M1"] :x-pitch 1.0 :y-pitch 1.0 :num-x 10 :num-y 10})
@@ -118,6 +130,27 @@
   (let [bytes (gdsii/export-gdsii [])
         len (count bytes)]
     (is (>= len 4))
+    (is (= 0x00 (bit-and (aget bytes (- len 4)) 0xFF)))
+    (is (= 0x04 (bit-and (aget bytes (- len 3)) 0xFF)))
+    (is (= gdsii/ENDLIB (bit-and (aget bytes (- len 2)) 0xFF)))))
+
+;; not in the original 10 Rust tests — edge-case coverage added during
+;; restoration review: exercises all four element `:kind`s (`:boundary`,
+;; `:path`, `:sref`, `:text`) together in one structure, rather than just
+;; `:boundary`.
+(deftest gdsii-multiple-element-types-roundtrip
+  (let [structures [{:name "CELL"
+                      :elements [{:kind :boundary :layer 1 :datatype 0
+                                  :xy [[0 0] [10 0] [10 10] [0 0]]}
+                                 {:kind :path :layer 2 :datatype 0 :width 5
+                                  :xy [[0 0] [10 10]]}
+                                 {:kind :sref :sname "CELL2" :xy [5 5]}
+                                 {:kind :text :layer 3 :xy [1 1] :string "hi"}]}]
+        bytes (gdsii/export-gdsii structures)
+        len (count bytes)]
+    (is (pos? len))
+    (is (every? #(<= 0 (bit-and % 0xFF) 255) bytes))
+    ;; ends with ENDLIB regardless of the element mix
     (is (= 0x00 (bit-and (aget bytes (- len 4)) 0xFF)))
     (is (= 0x04 (bit-and (aget bytes (- len 3)) 0xFF)))
     (is (= gdsii/ENDLIB (bit-and (aget bytes (- len 2)) 0xFF)))))

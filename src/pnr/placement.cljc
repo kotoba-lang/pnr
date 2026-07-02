@@ -16,7 +16,7 @@
 
 (defn placement-stats
   "Total cells, row-area utilization, and a bounding-box HPWL estimate."
-  [{:keys [rows cells] :as placement}]
+  [{:keys [rows cells]}]
   (let [total-cells (count cells)
         total-row-area (reduce + 0.0 (map #(* (row-total-width %) (:height %)) rows))
         cell-area (reduce + 0.0

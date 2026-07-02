@@ -14,14 +14,14 @@
 (def LAYER 0x0D) (def DATATYPE 0x0E) (def XY 0x10) (def ENDEL 0x11)
 (def SNAME 0x12) (def STRING 0x19) (def WIDTH 0x0F) (def TEXTTYPE 0x16)
 
-(def ^:private DT-NONE 0x00)
-(def ^:private DT-INT16 0x01)
-(def ^:private DT-INT32 0x03)
-(def ^:private DT-REAL8 0x05)
-(def ^:private DT-ASCII 0x06)
-
 #?(:clj
    (do
+     (def ^:private DT-NONE 0x00)
+     (def ^:private DT-INT16 0x01)
+     (def ^:private DT-INT32 0x03)
+     (def ^:private DT-REAL8 0x05)
+     (def ^:private DT-ASCII 0x06)
+
      (defn- write-record [^ByteArrayOutputStream buf record-type data-type ^bytes payload]
        (let [total-len (+ 4 (alength payload))]
          (.write buf (bit-and (bit-shift-right total-len 8) 0xFF))
