@@ -1,4 +1,6 @@
 {:paths ["src" "test"]
+ :deps {io.github.kotoba-lang/org-si2-lef {:local/root "../org-si2-lef"}
+        io.github.kotoba-lang/org-si2-def {:local/root "../org-si2-def"}}
  :aliases {:test {:extra-paths ["test"]
                   :extra-deps {io.github.cognitect-labs/test-runner
                                {:git/tag "v0.5.1" :git/sha "dfb30dd"}}
