@@ -16,6 +16,7 @@ Physical design backend for VLSI/ASIC layout.
 | `pnr.gdsii` | `gdsii` | GDSII binary stream export (JVM-only, `java.io`) |
 | `pnr.lef-adapter` | — (new) | Resolves `kotoba-lang/org-si2-lef` (LEF) cell geometry into placement site-widths and real GDSII boundary elements |
 | `pnr.def-adapter` | — (new) | Converts placement output into `kotoba-lang/org-si2-def` (DEF) component records |
+| `pnr.upf-adapter` | — (new) | Power-domain-aware placement validation via `kotoba-lang/org-ieee-upf` (UPF power intent) |
 
 Depends on `kotoba-lang/engineer` for shared contracts (constraint/DRC/etc).
 
@@ -59,6 +60,35 @@ physical libraries (LEF) and placed-design exchange (DEF):
   (DESIGN + COMPONENTS; `:nets`/`:tracks` left empty, out of scope for
   this adapter), giving `pnr` a standard, more interoperable DEF export
   path alongside its GDSII-only output.
+
+## UPF adapter (power-domain-aware placement)
+
+`pnr.placement` and `pnr.floorplan` previously knew nothing about power
+intent — no notion that two cells might belong to different power
+domains, and no way for a floorplan block to declare one. Power-domain-
+aware floorplanning/placement is a standard EDA requirement (cells in
+different power domains must not violate domain boundaries, and
+level-shifters/isolation cells are needed at domain crossings), so
+**`pnr.upf-adapter`** (`kotoba-lang/org-ieee-upf`) closes that gap:
+
+- `cell-power-domain` resolves one placed cell's UPF power domain by
+  running its `:instance-name` through `upf.domain/instance-domain`'s
+  longest-prefix instance-path match against a UPF domain registry.
+- `partition-by-domain` groups a `pnr.placement/place-cells` result by
+  resolved domain, `{domain-name [cells...] ... :unscoped [cells...]}`.
+- `domain-crossing-nets` takes a `net->pins` map (`{net-name
+  [instance-name ...] ...}`) and reports every net that connects cells in
+  more than one resolved domain — exactly the nets a real UPF flow needs
+  isolation cells or level shifters on — bundling in the
+  `upf.strategy/applicable-strategies` that apply to each domain the net
+  touches.
+- `validate-domain-placement` checks `pnr.floorplan` blocks: a block
+  opts into a domain policy via an (adapter-level, `pnr.floorplan`-
+  agnostic) optional `:power-domain` key, and every placed cell
+  geometrically inside that block must resolve to the same domain
+  (an unscoped cell inside a domain-scoped block is a violation; a
+  block with no `:power-domain` is never checked). Returns a vector of
+  violation maps, empty when placement is domain-consistent.
 
 ## Develop
 
