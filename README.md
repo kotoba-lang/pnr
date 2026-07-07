@@ -17,6 +17,7 @@ Physical design backend for VLSI/ASIC layout.
 | `pnr.lef-adapter` | — (new) | Resolves `kotoba-lang/org-si2-lef` (LEF) cell geometry into placement site-widths and real GDSII boundary elements |
 | `pnr.def-adapter` | — (new) | Converts placement output into `kotoba-lang/org-si2-def` (DEF) component records |
 | `pnr.upf-adapter` | — (new) | Power-domain-aware placement validation via `kotoba-lang/org-ieee-upf` (UPF power intent) |
+| `pnr.openaccess-adapter` | — (new) | OpenAccess-shaped design export (Lib/Cell/View + real 2D instance transforms) via `kotoba-lang/org-si2-openaccess` |
 
 Depends on `kotoba-lang/engineer` for shared contracts (constraint/DRC/etc).
 
@@ -89,6 +90,50 @@ level-shifters/isolation cells are needed at domain crossings), so
   (an unscoped cell inside a domain-scoped block is a violation; a
   block with no `:power-domain` is never checked). Returns a vector of
   violation maps, empty when placement is domain-consistent.
+
+## OpenAccess adapter (Lib/Cell/View export with real 2D transforms)
+
+`pnr.lef-adapter`/`pnr.def-adapter` give `pnr` GDSII and DEF export; both are
+flat formats (a structure of boundary elements, or a DESIGN + COMPONENTS
+list). **`pnr.openaccess-adapter`** (`kotoba-lang/org-si2-openaccess`) adds a
+third export path shaped like a real OpenAccess database: a **library of
+Lib/Cell/View hierarchy** built from LEF macros, and a **top-level design
+that instantiates those cells** at each placed cell's location/orientation,
+exercising OpenAccess's actual hierarchical instance-transform machinery
+(`openaccess.design/instance-transform-point`) on real pnr placement data:
+
+- `lef-macro->oa-cell` converts one LEF macro into an `openaccess.library`
+  Cell with a single `:layout` View, whose shapes are the macro's pin PORT
+  rects followed by its OBS rects (`openaccess.shape/rect`) — a leaf cell,
+  no sub-instances.
+- `lef-library->oa-library` maps `lef-macro->oa-cell` over a whole parsed
+  LEF library (`lef.core/parse-lef`'s output) into one `openaccess.library`
+  library map.
+- `placement->oa-design` converts a `pnr.placement/place-cells` placement
+  into an `openaccess.design`-shaped top-level view: no shapes of its own,
+  just one `openaccess.design/instance` per placed cell, offset by
+  `[:x :row-idx]` (same site/row-unit simplification `pnr.lef-adapter`/
+  `pnr.def-adapter` already document — not claimed to be real microns
+  unless the caller's rows are defined in real microns) and oriented via
+  `pnr-orientation->oa-orientation`, which translates `pnr.placement`'s
+  LEF/DEF orientation keywords (`:n`/`:s`/`:e`/`:w`/`:fn`/`:fs`/`:fe`/`:fw`)
+  into `openaccess.design`'s own vocabulary (`:R0`/`:R90`/`:R180`/`:R270`/
+  `:MX`/`:MY`/`:MXR90`/`:MYR90`), per the official LEF/DEF-to-OpenAccess
+  correspondence table in the LEF/DEF 5.7 Language Reference. Placed cells
+  the library can't resolve are skipped, not errored on.
+- `design->flat-shapes` flattens the whole placed design in one call via
+  `openaccess.query/flatten-instances`, returning fully transform-resolved
+  geometry for every placed cell's pins/obstructions.
+
+**Unlike `pnr.lef-adapter`'s GDSII path — which explicitly documents that it
+does NOT apply cell `:orientation` to geometry (translation only) — this
+OpenAccess path DOES apply orientation correctly**, because
+`openaccess.design/instance-transform-point` implements the real rotation/
+mirror matrix for all 8 Manhattan orientations. A cell placed at, say,
+`:fs` (mirrored) comes out of `design->flat-shapes` with its pin geometry
+actually mirrored, not just translated to the right place — verified by
+hand-computed coordinates in
+`test/pnr/openaccess_adapter_test.cljc`.
 
 ## Develop
 
