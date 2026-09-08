@@ -3,7 +3,7 @@
   (kami-engine/kami-pnr/src/{floorplan,placement,cts,routing,gdsii}.rs
   `mod tests`, deleted PR #82)."
   (:require [clojure.test :refer [deftest is testing]]
-            [clojure.string :as str]
+            [kotoba.lang.text :as str]
             [pnr]
             [pnr.floorplan :as floorplan]
             [pnr.placement :as placement]
