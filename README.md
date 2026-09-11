@@ -26,7 +26,7 @@ Depends on `kotoba-lang/engineer` for shared contracts (constraint/DRC/etc).
 Restored — all 5 modules ported from the original 1150-line Rust source
 (`lib.rs` + `floorplan.rs` + `placement.rs` + `cts.rs` + `routing.rs` +
 `gdsii.rs`), with all 10 original Rust unit tests mirrored 1:1 in
-`test/pnr_test.cljc` (+1 smoke test). Pure data + pure functions throughout
+`test/pnr_test.cljk` (+1 smoke test). Pure data + pure functions throughout
 (gdsii is JVM-only, `java.io.ByteArrayOutputStream`/`java.nio.ByteBuffer` —
 a CLJS arm can be added if a browser consumer needs GDSII export).
 `pnr.routing`'s occupancy/visited state uses sets of `[layer x y]` triples
@@ -133,7 +133,7 @@ mirror matrix for all 8 Manhattan orientations. A cell placed at, say,
 `:fs` (mirrored) comes out of `design->flat-shapes` with its pin geometry
 actually mirrored, not just translated to the right place — verified by
 hand-computed coordinates in
-`test/pnr/openaccess_adapter_test.cljc`.
+`test/pnr/openaccess_adapter_test.cljk`.
 
 ## Develop
 
