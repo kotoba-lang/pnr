@@ -138,5 +138,5 @@ hand-computed coordinates in
 ## Develop
 
 ```bash
-clojure -M:test
+kbb -M:test
 ```
