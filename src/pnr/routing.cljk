@@ -3,7 +3,8 @@
   from kami-pnr's `routing` module (deleted PR #82). Grid points are
   `[layer x y]` triples. Occupancy/visited state uses sets of `[layer x y]`
   rather than the original's nested 3D bool arrays — equivalent semantics,
-  more natural in Clojure.")
+  more natural in Clojure."
+  (:require [kotoba.lang.coll :as kcoll]))
 
 (defn routing-grid [{:keys [layers x-pitch y-pitch num-x num-y]}]
   {:layers (vec layers) :x-pitch x-pitch :y-pitch y-pitch :num-x num-x :num-y num-y})
@@ -50,7 +51,7 @@
   unreachable."
   [grid occupied src dst]
   (let [nl (count (:layers grid)) nx (:num-x grid) ny (:num-y grid)
-        empty-queue #?(:clj clojure.lang.PersistentQueue/EMPTY :cljs cljs.core/PersistentQueue.EMPTY)]
+        empty-queue kcoll/empty-queue]
     (loop [queue (conj empty-queue src)
            visited #{src}
            parent {}]
