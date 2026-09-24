@@ -1,5 +1,5 @@
 (ns pnr.def-adapter-test
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [pnr.placement :as placement]
             [pnr.def-adapter :as def-adapter]
             [def-format.component :as def-component]))

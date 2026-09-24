@@ -1,5 +1,5 @@
 (ns pnr.openaccess-adapter-test
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [lef.core :as lef]
             [openaccess.library :as oa-lib]
             [pnr.placement :as placement]

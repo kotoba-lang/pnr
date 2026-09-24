@@ -1,5 +1,5 @@
 (ns pnr.lef-adapter-test
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [lef.core :as lef]
             [pnr.lef-adapter :as lef-adapter]))
 

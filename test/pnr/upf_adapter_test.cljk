@@ -1,5 +1,5 @@
 (ns pnr.upf-adapter-test
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [upf.domain :as upf-domain]
             [upf.strategy :as upf-strategy]
             [pnr.upf-adapter :as upf-adapter]))
