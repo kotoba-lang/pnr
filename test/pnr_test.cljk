@@ -2,7 +2,7 @@
   "Restoration-fidelity tests — one per original kami-pnr Rust test
   (kami-engine/kami-pnr/src/{floorplan,placement,cts,routing,gdsii}.rs
   `mod tests`, deleted PR #82)."
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [kotoba.test :refer [deftest is testing]]
             [kotoba.lang.text :as str]
             [pnr]
             [pnr.floorplan :as floorplan]
