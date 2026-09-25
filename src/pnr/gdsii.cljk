@@ -5,7 +5,8 @@
   + 1 byte record type + 1 byte data type + payload. JVM-only
   (`java.io.ByteArrayOutputStream`) — a CLJS arm can be added if a browser
   consumer needs GDSII export."
-  #?(:clj (:import [java.io ByteArrayOutputStream])))
+  #?(:clj (:import [java.io ByteArrayOutputStream]))
+  (:require [kotoba.bytes :as kbytes]))
 
 ;; GDSII record type constants
 (def HEADER 0x00) (def BGNLIB 0x01) (def LIBNAME 0x02) (def UNITS 0x03)
@@ -46,7 +47,7 @@
                       (byte-array (mapcat int32-bytes values))))
 
      (defn- write-string-record [buf record-type ^String s]
-       (let [bytes (.getBytes s "UTF-8")
+       (let [bytes (kbytes/utf8-bytes s)
              bytes (if (odd? (alength bytes)) (byte-array (concat bytes [0])) bytes)]
          (write-record buf record-type DT-ASCII bytes)))
 
